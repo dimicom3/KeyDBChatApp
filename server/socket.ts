@@ -16,8 +16,7 @@ const initSocket = (io:Server) => {
 
         socket.on("message",
         async (message: any) => {
-            message = { ...message, message: message.message };
-
+  
             // await keyDB.client.sAdd("users/active", `${message.from}`);
             
             // const roomKey = `room:${message.roomId}`;
@@ -40,8 +39,7 @@ const initSocket = (io:Server) => {
             // io.to(roomKey).emit("message", message);
             
             //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-            message = { ...message, message: message.message };//provera poruke potrebna
+            console.log(message)
 
             await keyDB.client.sAdd("users/active", `${message.from}`);
             const expirationInSeconds = message.expSec
@@ -49,7 +47,7 @@ const initSocket = (io:Server) => {
             message = {...message, expDate: expirationTimestamp}
             const messageString = JSON.stringify(message);
             const roomKey = `room:${message.roomId}`;
-
+            console.log(message)
         
             const private_room = !(await keyDB.client.exists(`${roomKey}:name`));
             const has_messages = await keyDB.client.exists(roomKey);
@@ -69,7 +67,6 @@ const initSocket = (io:Server) => {
             await (keyDB.client as any).zAdd(roomKey,{score: "" + message.date,value: messageString});
             
             await keyDB.client.sendCommand(["EXPIREMEMBER", roomKey, messageString, expirationInSeconds.toString()])
-
             io.to(roomKey).emit("message", message);
         }
         );

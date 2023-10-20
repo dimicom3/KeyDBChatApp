@@ -21,7 +21,7 @@ const Users = ({ dispatch, userProp, onMessageSend }) => {
   const onClick = async (user1_id, user2_id) => {
     const result = await addRoom(user1_id, user2_id);
     console.log(result.id);
-    onMessageSend("Hello!", result.id, 99999999);
+    onMessageSend("Hello!", result.id, 99999999, "text");
     window.location.reload(false);
   };
 

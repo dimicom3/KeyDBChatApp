@@ -100,7 +100,6 @@ export class UserService extends BaseService {
 
     let messages = await this.keyDB.zRange(roomKey, 0, -1);
     messages = messages.map((msg) => JSON.parse(msg)).reverse();
-
     return messages;
   }
 
