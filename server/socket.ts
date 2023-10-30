@@ -67,6 +67,7 @@ const initSocket = (io:Server) => {
             await (keyDB.client as any).zAdd(roomKey,{score: "" + message.date,value: messageString});
             
             await keyDB.client.sendCommand(["EXPIREMEMBER", roomKey, messageString, expirationInSeconds.toString()])
+            
             io.to(roomKey).emit("message", message);
         }
         );
