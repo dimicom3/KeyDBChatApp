@@ -3,6 +3,7 @@ import { MESSAGES_TO_LOAD } from "../../../../services/user.service";
 import MsgRec from "./components/MsgRec";
 import MsgSnd from "./components/MsgSnd";
 import {Card, Button } from "react-bootstrap";
+import moment from "moment";
 
 const Messages = ({
   messageListElement,
@@ -20,11 +21,19 @@ const Messages = ({
     let isMounted = true;
     const filterExpiredMessages = () => {
       const currentTimestamp = Date.now();
+      
+
       if (messages) {
         const filtered = messages.filter((message) => {
+          console.log(message)
           // console.log(new Date(message.expDate));
           // console.log(new Date(currentTimestamp));
           // let expDate = new Date(message.expDate)
+          const expDate = moment(message.expDate).unix()
+          const currentText=  Math.floor(currentTimestamp/1000)
+          // console.log("EXPDATE: ",expDate)
+          // console.log("CURRENT TIMESTAMP: ", currentText)
+          // console.log(expDate - currentText)
           if (message.expDate && new Date(message.expDate) <= new Date(currentTimestamp)) {
             // Message has expired
             return false;
@@ -90,7 +99,8 @@ const Messages = ({
               </div>
             ) : null
             }
-            {filteredMessages.map((message, x) => {
+            {filteredMessages &&
+            filteredMessages.map((message, x) => {
               const key = message.message + message.date + message.from + x;
               if (message.from === "info") {
                 return (
@@ -110,6 +120,8 @@ const Messages = ({
                     message={message.message}
                     date={message.date}
                     user={users[message.from]}
+                    type={message.type}
+                    TTL={moment(message.expDate).unix() - Math.floor(Date.now()/1000)}
                   />
                 );
               }
@@ -119,6 +131,9 @@ const Messages = ({
                   key={key}
                   message={message.message}
                   date={message.date}
+                  type={message.type}
+                  TTL={moment(message.expDate).unix() - Math.floor(Date.now()/1000)}
+
                 />
               );
             })}

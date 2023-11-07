@@ -90,19 +90,21 @@ const App = () => {
   }, [dispatch, state.rooms, user]);
 
   const onMessageSend = useCallback(
-    (message, roomId, expSec) => {
-      if (typeof message !== "string" || message.trim().length === 0)  return;
-      
+    (message, roomId, expSec, type) => {
+      console.log(message)
+      if (type == "text" && (typeof message !== "string" || message.trim().length === 0))  return;
+      console.log("testend")
       if (!socket) {
         console.error("Couldn't send message");
       }
       socket.emit("message", {
         roomId: roomId,
+        type: type,
         message,
         from: user.id,
         expSec: expSec,
         date: moment(new Date()).unix(),
-      });
+      });console.log("message sent: ", message)
     },
     [user, socket]
   );

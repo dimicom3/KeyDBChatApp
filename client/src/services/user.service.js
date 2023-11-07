@@ -41,7 +41,7 @@ export const logOut = () => {
 };
 
 export const getMessages = (id, offset = 0, size = MESSAGES_TO_LOAD) => {
-  return fetchData(`/users/room/${id}/messages?offset=${offset}&size=${size}`, 'GET').then((x) => x.data.reverse());
+  return fetchData(`/users/room/${id}/messages?offset=${offset}&size=${size}`, 'GET').then((x) => {console.log(x);if(x) return x.data.reverse()});
 };
 
 export const getPreloadedRoom = async () => {

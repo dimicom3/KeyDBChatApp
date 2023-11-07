@@ -90,7 +90,7 @@ export class UserService extends BaseService {
   }
 
   // Get messages for a room
-  async getMessages(roomId = "0", offset = 0, size = 30) {
+  async getMessages(roomId = "0", offset = 0, size = -1) {
     const roomKey = `room:${roomId}`;
     const roomExists = await this.keyDB.exists(roomKey);
 
@@ -98,9 +98,8 @@ export class UserService extends BaseService {
       throw new ApplicationError("Room doesn't exist");
     }
 
-    let messages = await this.keyDB.zRange(roomKey, 0, -1);
+    let messages = await this.keyDB.zRange(roomKey, 0, 30);
     messages = messages.map((msg) => JSON.parse(msg)).reverse();
-
     return messages;
   }
 

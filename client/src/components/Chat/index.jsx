@@ -12,7 +12,7 @@ import { getUsers } from "../../services/user.service";
 export default function Chat({ onLogOut, user, onMessageSend }) {
   const [state, dispatch] = useAppState();
   const messageListElement = useRef(null);
-
+  const [showUploadFile, setShowUploadFile] = useState(false)
 
   const socketRef = useRef(null);
   const socket = socketRef.current;
@@ -22,7 +22,6 @@ export default function Chat({ onLogOut, user, onMessageSend }) {
   const roomId = room?.id;
   const messages = room?.messages;
 
-  const [message, setMessage] = useState("");
   const room_name_transform = (names, username) => {
     for (let name of names) {
       if (typeof name !== 'string') {
@@ -79,14 +78,15 @@ export default function Chat({ onLogOut, user, onMessageSend }) {
   const onFetchMessages = useCallback(
     (offset = 0) => {
       getMessages(roomId, offset).then(async (messages) => {
-        await get_useres_msgs(state.users, dispatch, messages);
-        dispatch({
-          type:  "set messages",
-          payload: { id: roomId, messages: messages },
-        });
-      
-        scrollToBottom();
-      
+        if(messages){
+          await get_useres_msgs(state.users, dispatch, messages);
+          dispatch({
+            type:  "set messages",
+            payload: { id: roomId, messages: messages },
+          });
+        
+          scrollToBottom();
+        }
       });
     },
     [dispatch, roomId, scrollToBottom, scrollToTop, state.users]
@@ -137,17 +137,52 @@ export default function Chat({ onLogOut, user, onMessageSend }) {
 
 
   const [expSec, setExpSec] = useState(60)
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [message, setMessage] = useState("");
+
+
+  const handleImageChange = (e) => {
+    setSelectedImage(e.target.files[0]);
+  };
+
+
   const onSubmit= (e) => {
               e.preventDefault();
-              onMessageSend(message.trim(), roomId, expSec);
-              setMessage("");
-              onMessageSend("", 0, 0)
-              messageListElement.current.scrollTop =
-                messageListElement.current.scrollHeight;
-              setTimeout(() => {
+              if(message){
+                onMessageSend(message.trim(), roomId, expSec, "text");
+                setMessage("");
+                onMessageSend("", 0, 0)
                 messageListElement.current.scrollTop =
-                messageListElement.current.scrollHeight;
-              }, 100);
+                  messageListElement.current.scrollHeight;
+                setTimeout(() => {
+                  messageListElement.current.scrollTop =
+                  messageListElement.current.scrollHeight;
+                }, 100);
+              }
+              if(selectedImage)
+              {
+                const reader = new FileReader();
+                reader.onload = function(){
+                  
+                  // Use socket.io to send the image data
+                  // socket.emit('image', { imageData: e.target.result, filename: selectedImage.name });
+                  const base64 = this.result.replace(/.*base64,/, '');
+                  onMessageSend(base64, roomId, expSec, "image");
+
+                };
+                //reader.readAsArrayBuffer(selectedImage)
+                reader.readAsDataURL(selectedImage)
+                setSelectedImage(null);
+                onMessageSend("", 0, 0)
+                messageListElement.current.scrollTop =
+                  messageListElement.current.scrollHeight;
+                setTimeout(() => {
+                  messageListElement.current.scrollTop =
+                  messageListElement.current.scrollHeight;
+                }, 100);
+                setShowUploadFile(false)
+
+              }
             };
 
   return (
@@ -180,18 +215,29 @@ export default function Chat({ onLogOut, user, onMessageSend }) {
           />
 
           <div className="p-3 chat-input-section">
-            <form className="row" onSubmit={onSubmit}>
-              <Col>
-                <div className="position-relative">
-                  <Form.Control
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    type="text"
-                    className="form-control chat-input"
-                  />
-                </div>
-              </Col>
-              <Col xs='auto'>
+            <form className="row" encType="multipart/form-data" onSubmit={onSubmit} >
+              
+              <Col xs='1'><Button className="btin btn-secondary w-sm" onClick={() => {setShowUploadFile(!showUploadFile)}}>+</Button></Col>
+              {
+                !showUploadFile ? (
+                  <Col  xs='5'>
+                    <div className="position-relative">
+                      <Form.Control
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        type="text"
+                        className="form-control chat-input"
+                      />
+                    </div>
+                  </Col>
+                ) :
+                (
+                  <Col  xs='5'>
+                    <input type="file" onChange={handleImageChange} accept="image/*" />
+                  </Col>
+                    )
+              }
+              <Col xs='2' className="mr-3 py-1">
               <select value={expSec} onChange={(event) => {setExpSec(event.target.value);}}>
                 <option value={3600}>1 hour</option>
                 <option value={1800}>30 minute</option>
@@ -199,6 +245,7 @@ export default function Chat({ onLogOut, user, onMessageSend }) {
                 <option value={9999999999}>never</option>
               </select>
               </Col>
+
               <Col xs="auto">
                 <Button type="submit" className="btn btn-secondary w-sm">Send</Button>
               </Col>
